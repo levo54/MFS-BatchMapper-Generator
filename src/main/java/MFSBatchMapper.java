@@ -26,7 +26,7 @@ public class MFSBatchMapper {
 		public static int OFFSET = 2;
 	
 	  public static void main(String[] args) throws IOException {
-		    final String FILENAME="/Users/levv/Downloads/prp_eqi_r6.pdf";
+		    final String FILENAME="/Users/levv/Downloads/prp_iie_.pdf";
 		    
 		    ArrayList<String> TOC_Text = new ArrayList<String>();
 		    ArrayList<Integer> TOC_Pages = new ArrayList<Integer>();
@@ -83,10 +83,32 @@ public class MFSBatchMapper {
 		        }
 		    }
 		    
-		    CalcPages(TOC_Pages,totalPages);
-
+		    
+		    generateIT(TOC_Text,CalcPages(TOC_Pages,totalPages));
 
 		}
+	  
+	  
+	  public static void generateIT(ArrayList<String> text, ArrayList<String> pages)
+	  {
+		  int i;
+		  
+		  for(i=0;i<text.size();i++)
+		  {
+			  String str = "java -jar ~/Documents/ImageTester_2.0.0.jar -f ~/Downloads/prp_eqi_r6.pdf -k apikey -fn \"%s\" -sp %s -fb \"TOC<>MAP\" &&";
+			  str=String.format(str, text.get(i),pages.get(i));
+			  
+			  System.out.println(str);
+			 try {
+				Runtime.getRuntime().exec(str);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		  }
+		  
+	  }
+	  
 	  
 	  
 	  public static ArrayList<String> CalcPages(ArrayList<Integer> pages,int totalPages)
