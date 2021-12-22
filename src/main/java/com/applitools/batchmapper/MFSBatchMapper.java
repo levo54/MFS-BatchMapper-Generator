@@ -1,3 +1,5 @@
+package com.applitools.batchmapper;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,19 +24,73 @@ import technology.tabula.extractors.BasicExtractionAlgorithm;
  *
  */
 public class MFSBatchMapper {
-
-		public static int OFFSET = 2;
 	
-	  public static void main(String[] args) throws IOException {
-		    final String FILENAME="/Users/levv/Downloads/prp_iie_.pdf";
+	public static int OFFSET = 2;
+   
+
+	public static void main(String[] args) throws IOException {
 		    
-		    ArrayList<String> TOC_Text = new ArrayList<String>();
-		    ArrayList<Integer> TOC_Pages = new ArrayList<Integer>();
+		     if( args.length < 2 )
+		        {
+		            usage();
+		        }
+		        else
+		        {
+		        	MFSBatchMapper batchMapper = new MFSBatchMapper();
+		        	batchMapper.execute(args);
+		        }  
+		  
+		}
+	  	  
+	    /**
+	     * Print help.
+	     */
+	    private static void usage()
+	    {
+	        System.err.println( "Usage: java -jar MFSBatchMapper.jar -f <A path to target folder or file>" );
+	    }
+
+	   
+	  public void execute(String[] args) throws IOException
+	  {
+		  String path = "";
+		  
+		  for (int i=0; i < args.length; i++) {
+	            if (args[i].equals("-f")) {
+	                i++;
+	                path = args[i];
+	            }
+	        }
+		  
+		  if(path == "") 
+		  {
+			  usage();
+			  return;
+		  }
 		    
-		    PDDocument pd = PDDocument.load(new File(FILENAME));
+		  File root = new File(path);
+		  	if (root.isFile())
+		  	{
+		  		parseFile(root);
+		  	}
+		  	else
+		  	{
+		  		File[] files = root.listFiles();
+		  	   for (File file : files) {
+		  		 parseFile(file);
+	            }
+		  	}
+	  }
+	  
+	  public void parseFile(File file) throws IOException
+	  {
+		  ArrayList<String> TOC_Text = new ArrayList<String>();
+		  ArrayList<Integer> TOC_Pages = new ArrayList<Integer>();
+		    
+		    PDDocument pd = PDDocument.load(file);
 
 		    int totalPages = pd.getNumberOfPages();
-		    System.out.println("Total Pages in Document: "+totalPages);
+//		    System.out.println("Total Pages in Document: "+totalPages);
 
 		    ObjectExtractor oe = new ObjectExtractor(pd);
 		    BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
@@ -58,7 +114,7 @@ public class MFSBatchMapper {
 		            	try {
 		            		int len=text.length();
 		            		TOC_Text.add(text.substring(0, text.lastIndexOf(" ")==-1? text.length()-1 :text.lastIndexOf(" ")));
-            			            		
+          			            		
 		            		Pattern numbers = Pattern.compile("\\d+");
 		            		Matcher matcher = numbers.matcher(text);
 		            		if (matcher.find())
@@ -79,39 +135,17 @@ public class MFSBatchMapper {
 	            	
 		            }
 
-		           // System.out.println();
 		        }
 		    }
-		    
-		    
-		    generateIT(TOC_Text,CalcPages(TOC_Pages,totalPages));
+		    pd.close();
+		    generateIT(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
 
-		}
-	  
-	  
-	  public static void generateIT(ArrayList<String> text, ArrayList<String> pages)
-	  {
-		  int i;
-		  
-		  for(i=0;i<text.size();i++)
-		  {
-			  String str = "java -jar ~/Documents/ImageTester_2.0.0.jar -f ~/Downloads/prp_eqi_r6.pdf -k apikey -fn \"%s\" -sp %s -fb \"TOC<>MAP\" &&";
-			  str=String.format(str, text.get(i),pages.get(i));
-			  
-			  System.out.println(str);
-			 try {
-				Runtime.getRuntime().exec(str);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		  }
-		  
 	  }
 	  
 	  
 	  
-	  public static ArrayList<String> CalcPages(ArrayList<Integer> pages,int totalPages)
+	  
+	  public ArrayList<String> CalcPages(ArrayList<Integer> pages,int totalPages)
 	  {
 		    ArrayList<String> TOC_pages = new ArrayList<String>();
 		    int loopSize= pages.size()-1;
@@ -141,6 +175,26 @@ public class MFSBatchMapper {
 	    		TOC_pages.add(i, String.format("%d-%d", a,totalPages));
 		   
 	   return TOC_pages;
+		  
+	  }
+	  
+	  public void generateIT(ArrayList<String> text, ArrayList<String> pages,File file) throws IOException
+	  {
+		  int i;
+		  
+		  for(i=0;i<text.size();i++)
+		  {
+			  String str = "java -jar ~/Documents/ImageTester_2.0.0.jar -f %s -k fcq4rttvnfdjwWt6v99c8cC6FomulWtHwxz3fn104kPf6o110 -a %s -fn \"%s\" -sp %s -fb \"TOC1<>MAP1\" &&";
+			  str=String.format(str,file.getCanonicalPath(),file.getName(), text.get(i),pages.get(i));
+			  
+			  System.out.println(str);
+			 try {
+				Runtime.getRuntime().exec(str);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		  }
 		  
 	  }
 	  
