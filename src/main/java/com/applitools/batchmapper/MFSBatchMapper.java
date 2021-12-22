@@ -181,20 +181,15 @@ public class MFSBatchMapper {
 	  public void generateIT(ArrayList<String> text, ArrayList<String> pages,File file) throws IOException
 	  {
 		  int i;
-		  
+		  String str="";
+		  String pattern = "java -jar ~/Documents/ImageTester_2.0.0.jar -f \"%s\" -a \"%s\" -fn \"%s\" -sp %s -fb \"TOC1<>MAP1\" && \n";		  
 		  for(i=0;i<text.size();i++)
 		  {
-			  String str = "java -jar ~/Documents/ImageTester_2.0.0.jar -f %s -k fcq4rttvnfdjwWt6v99c8cC6FomulWtHwxz3fn104kPf6o110 -a %s -fn \"%s\" -sp %s -fb \"TOC1<>MAP1\" &&";
-			  str=String.format(str,file.getCanonicalPath(),file.getName(), text.get(i),pages.get(i));
+			 
+			  str+= String.format(pattern,file.getCanonicalPath(),file.getName(), text.get(i),pages.get(i));
 			  
-			  System.out.println(str);
-			 try {
-				Runtime.getRuntime().exec(str);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		  }
+			  }
+		  System.out.println(str);
 		  
 	  }
 	  
