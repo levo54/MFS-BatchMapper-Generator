@@ -243,7 +243,7 @@ public class MFSBatchMapper {
 				str+= String.format(pattern,apiKey,serverUrl,file.getCanonicalPath(),file.getName(), text.get(i),pages.get(i),batchName,batchId);
 
 			}
-			System.out.println(str);
+			System.out.println(str.substring(0,str.lastIndexOf(" &&")));
 
 		}
 	}
