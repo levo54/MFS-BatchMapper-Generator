@@ -236,7 +236,7 @@ public class MFSBatchMapper {
             apiKey = apiKey =="" ? "" : "-k " + apiKey;
             serverUrl = serverUrl =="" ? "" : "-s " + "\""+serverUrl+"\"";
             
-			String pattern = "java -jar ImageTester_2.2.1 %s %s -f \"%s\" -a \"%s\" -fn \"%s\" -sp %s -fb \"%s<>%s\" && \n";		  
+			String pattern = "java -jar ImageTester_2.2.1.jar %s %s -f \"%s\" -a \"%s\" -fn \"%s\" -sp %s -fb \"%s<>%s\" && \n";		  
 			for(i=0;i<text.size();i++)
 			{
 
