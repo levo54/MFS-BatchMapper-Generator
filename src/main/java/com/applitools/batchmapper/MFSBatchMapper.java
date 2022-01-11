@@ -81,6 +81,26 @@ public class MFSBatchMapper {
                 .argName("name")
                 .build());
 
+        options.addOption(Option.builder("t")
+                .longOpt("toc")
+                .desc("Table of Contents page number, default: 2 ")
+                .hasArg()
+                .argName("toc")
+                .build());
+        
+        options.addOption(Option.builder("o")
+                .longOpt("offset")
+                .desc("Number of pages to offset for the page number count, default: TOC page number ")
+                .hasArg()
+                .argName("offset")
+                .build());
+        
+        options.addOption(Option.builder("sc")
+                .longOpt("section")
+                .desc("Map only a specific section")
+                .hasArg()
+                .argName("section")
+                .build());
 
 		return options;
 
@@ -99,13 +119,20 @@ public class MFSBatchMapper {
 	public class MFSBatchMapperExceuter
 	{
 
-		public int OFFSET = 2; // TOC + Header pages
-		final String batchId =UUID.randomUUID().toString(); 
+		final String batchId =UUID.randomUUID().toString();
 		
+		private int offset; // TOC + Header pages
+		private int tocPage;
 		private CommandLine cmd;  
+		private String section;
+		
+		
 		public MFSBatchMapperExceuter(CommandLine cmd)
 		{
 			this.cmd = cmd;
+			this.tocPage = Integer.parseInt(cmd.getOptionValue("t", "2"));
+			this.offset = Integer.parseInt(cmd.getOptionValue("o", ""+tocPage));
+			this.section = cmd.getOptionValue("sc",null);
 		}
 
 		public void execute() throws IOException
@@ -139,7 +166,7 @@ public class MFSBatchMapper {
 
 			ObjectExtractor oe = new ObjectExtractor(pd);
 			BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
-			Page page = oe.extract(OFFSET);
+			Page page = oe.extract(tocPage);
 
 			// extract text from the table after detecting
 			List<Table> table = sea.extract(page);
@@ -209,7 +236,7 @@ public class MFSBatchMapper {
 					TOC_pages.add(i, String.format("%d-%d", a,b-1));
 			}
 
-			totalPages=totalPages-OFFSET;
+			totalPages=totalPages-offset;
 			a=pages.get(i);
 
 			if(totalPages-a==0)
@@ -239,11 +266,11 @@ public class MFSBatchMapper {
 			String pattern = "java -jar ImageTester_2.2.1.jar %s %s -f \"%s\" -a \"%s\" -fn \"%s\" -sp %s -fb \"%s<>%s\" && \n";		  
 			for(i=0;i<text.size();i++)
 			{
-
+				if(text.get(i).compareTo(section) == 0 || section == null)
 				str+= String.format(pattern,apiKey,serverUrl,file.getCanonicalPath(),file.getName(), text.get(i),pages.get(i),batchName,batchId);
 
 			}
-			System.out.println(str.substring(0,str.lastIndexOf(" &&")));
+			System.out.println(str);
 
 		}
 	}
