@@ -1,15 +1,25 @@
 package com.applitools.batchmapper;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.pdfbox.pdmodel.PDDocument;
+
+import com.opencsv.CSVWriter;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -101,6 +111,14 @@ public class MFSBatchMapper {
                 .hasArg()
                 .argName("section")
                 .build());
+        
+        options.addOption(Option.builder("cg")
+                .longOpt("cmdgen")
+                .desc("Generate Commands in addition to csv")
+                .hasArg(false)
+                .argName("cmdgen")
+                .build());
+
 
 		return options;
 
@@ -132,12 +150,17 @@ public class MFSBatchMapper {
 			this.cmd = cmd;
 			this.tocPage = Integer.parseInt(cmd.getOptionValue("t", "2"));
 			this.offset = Integer.parseInt(cmd.getOptionValue("o", ""+tocPage));
-			this.section = cmd.getOptionValue("sc",null);
+			this.section = cmd.getOptionValue("sc","");
 		}
 
 		public void execute() throws IOException
 		{
+			
+			List<String[]> rows4CSV = new ArrayList<String[]>();
+			CSVWriter writer = new CSVWriter(new FileWriter(System.getProperty("user.dir")+"/map.csv"));
 
+			
+			
 			File root = new File(cmd.getOptionValue("f", "."));
 			if (root.isFile())
 			{
@@ -147,14 +170,19 @@ public class MFSBatchMapper {
 			{
 				File[] files = root.listFiles();
 				for (File file : files) {
-					parseFile(file);
+					rows4CSV.addAll(parseFile(file));
 				}
 			}
-
+			
+			writer.writeAll(rows4CSV);
+			writer.close();
+			System.out.println("Generated CSV file to: "+System.getProperty("user.dir")+"/map.csv");
+			
+			
 		} 
 
 
-		private void parseFile(File file) throws IOException
+		private List<String[]> parseFile(File file) throws IOException
 		{
 			ArrayList<String> TOC_Text = new ArrayList<String>();
 			ArrayList<Integer> TOC_Pages = new ArrayList<Integer>();
@@ -210,7 +238,10 @@ public class MFSBatchMapper {
 				}
 			}
 			pd.close();
-			generateIT(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
+			
+			if(cmd.hasOption("cmdgen"))
+				generateIT(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
+			return generateList4CSV(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
 
 		}
 
@@ -266,12 +297,42 @@ public class MFSBatchMapper {
 			String pattern = "java -jar ImageTester_2.2.1.jar %s %s -f \"%s\" -a \"%s\" -fn \"%s\" -sp %s -fb \"%s<>%s\" && \n";		  
 			for(i=0;i<text.size();i++)
 			{
-				if(text.get(i).compareTo(section) == 0 || section == null)
+				if(text.get(i).compareTo(section) == 0 || section == "")
 				str+= String.format(pattern,apiKey,serverUrl,file.getCanonicalPath(),file.getName(), text.get(i),pages.get(i),batchName,batchId);
 
 			}
 			System.out.println(str);
 
 		}
+		
+		
+		public List<String[]> generateList4CSV(ArrayList<String> text, ArrayList<String> pages,File file) throws IOException
+		{
+			int i;
+			
+			String str="";
+			List<String[]> rows = new ArrayList<String[]>();
+			String[] row;
+
+			
+            for(i=0;i<text.size();i++)
+			{
+				if(text.get(i).compareTo(section) == 0 || section == "")
+				{
+				row = new String[10];
+				Arrays.fill(row, "");
+				row[0]=row[2]=file.getName(); // FileName and AppName
+				row[1]=text.get(i);  // TestName
+				row[3]=pages.get(i); // Span
+				
+				rows.add(row);
+				}
+				
+
+			}
+			return rows;
+
+		}
+		
 	}
 }
