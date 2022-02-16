@@ -1,4 +1,4 @@
-# MFS-BatchMapper-Generator
+# MFS-BatchMapper-Generator [ ![Download](https://img.shields.io/github/v/tag/applitools/MFS-BatchMapper-Generator?label=Download&style=plastic) ](https://github.com/applitools/MFS-BatchMapper-Generator/releases/latest)
 
 MFS BatchMapper Generator creates batchMap out of MFS PDFs
 Output to the format of [ImageTester](https://github.com/applitools/ImageTester/)
