@@ -10,6 +10,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.text.html.HTMLEditorKit.Parser;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -32,10 +34,10 @@ import technology.tabula.extractors.BasicExtractionAlgorithm;
  */
 
 /**
- * @author levv
+ * @author Lev Volkovich
  *
  */
-public class MFSBatchMapper {
+public class MFS_BatchMapper_Generator {
 
 	public static void main(String[] args) throws IOException {
 
@@ -50,7 +52,7 @@ public class MFSBatchMapper {
 				return;
 			}
 
-			MFSBatchMapperExceuter batchMapper = new MFSBatchMapper().new MFSBatchMapperExceuter(cmd);
+			MFSBatchMapperExceuter batchMapper = new MFS_BatchMapper_Generator().new MFSBatchMapperExceuter(cmd);
 			batchMapper.execute();
 			
 		} catch (ParseException e) {
@@ -181,7 +183,7 @@ public class MFSBatchMapper {
 			String csvFilePath = System.getProperty("user.dir")+"/map.csv";
 			System.out.println("Generated CSV file to: "+csvFilePath);
 			System.out.println("Run the following command in ImageTester Folder");
-			System.out.println(generateEndCommand(csvFilePath));			
+			System.out.println(generateEndCommand(csvFilePath));						
 		} 
 
 
