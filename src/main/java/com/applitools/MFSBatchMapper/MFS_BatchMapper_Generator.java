@@ -88,7 +88,7 @@ public class MFS_BatchMapper_Generator {
 		
         options.addOption(Option.builder("fb")
                 .longOpt("flatbatch")
-                .desc("Aggregate all test results in a single batch (aka flat-batch), default: folder name ")
+                .desc("Aggregate all test results in a single batch (aka flat-batch), default: \"Report Testing\" ")
                 .hasArg()
                 .argName("name")
                 .build());
