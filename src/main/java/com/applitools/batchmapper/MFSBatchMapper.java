@@ -157,9 +157,11 @@ public class MFSBatchMapper {
 		{
 			
 			List<String[]> rows4CSV = new ArrayList<String[]>();
-			CSVWriter writer = new CSVWriter(new FileWriter(System.getProperty("user.dir")+"/map.csv"));
-
+			CSVWriter writer = new CSVWriter(new FileWriter(System.getProperty("user.dir")+"/map.csv"),'|',CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
 			
+			//Add header row
+			String[] headerRow = new String[] { "filePath", "testName", "app", "os", "browser", "viewport", "matchsize", "pages","matchLevel" };
+			rows4CSV.add(headerRow);
 			
 			File root = new File(cmd.getOptionValue("f", "."));
 			if (root.isFile())
@@ -176,9 +178,10 @@ public class MFSBatchMapper {
 			
 			writer.writeAll(rows4CSV);
 			writer.close();
-			System.out.println("Generated CSV file to: "+System.getProperty("user.dir")+"/map.csv");
-			
-			
+			String csvFilePath = System.getProperty("user.dir")+"/map.csv";
+			System.out.println("Generated CSV file to: "+csvFilePath);
+			System.out.println("Run the following command in ImageTester Folder");
+			System.out.println(generateEndCommand(csvFilePath));			
 		} 
 
 
@@ -294,7 +297,7 @@ public class MFSBatchMapper {
             apiKey = apiKey =="" ? "" : "-k " + apiKey;
             serverUrl = serverUrl =="" ? "" : "-s " + "\""+serverUrl+"\"";
             
-			String pattern = "java -jar ImageTester_2.2.1.jar %s %s -f \"%s\" -a \"%s\" -fn \"%s\" -sp %s -fb \"%s<>%s\" && \n";		  
+			String pattern = "java -jar ImageTester_2.3.1.jar %s %s -f \"%s\" -a \"%s\" -fn \"%s\" -sp %s -fb \"%s<>%s\" && \n";		  
 			for(i=0;i<text.size();i++)
 			{
 				if(text.get(i).compareTo(section) == 0 || section == "")
@@ -303,6 +306,24 @@ public class MFSBatchMapper {
 			}
 			System.out.println(str);
 
+		}
+		
+		
+		public String generateEndCommand(String csvPath) throws IOException
+		{
+			String str;
+            String apiKey = cmd.getOptionValue("k","");
+            String serverUrl = cmd.getOptionValue("s", "https://mfseyes.applitools.com");
+            String batchName = cmd.getOptionValue("fb", "Report Testing");
+            
+            
+            apiKey = apiKey =="" ? "" : "-k " + apiKey;
+            serverUrl = serverUrl =="" ? "" : "-s " + "\""+serverUrl+"\"";
+            
+			String pattern = "java -jar ImageTester_2.3.1.jar %s %s -mp \"%s\" -fb \"%s<>%s\" -th 10";		  
+			str= String.format(pattern,apiKey,serverUrl,csvPath,batchName,batchId);
+
+			return str;
 		}
 		
 		
@@ -319,11 +340,14 @@ public class MFSBatchMapper {
 			{
 				if(text.get(i).compareTo(section) == 0 || section == "")
 				{
-				row = new String[10];
+					
+							
+				row = new String[9];
 				Arrays.fill(row, "");
-				row[0]=row[2]=file.getName(); // FileName and AppName
+				row[0]= file.getAbsolutePath();
 				row[1]=text.get(i);  // TestName
-				row[3]=pages.get(i); // Span
+				row[2]=file.getName(); // FileName as AppName
+				row[7]=pages.get(i); // Span				
 				
 				rows.add(row);
 				}
