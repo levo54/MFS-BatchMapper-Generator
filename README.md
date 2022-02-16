@@ -9,7 +9,7 @@ The BatchMapper parses given MFS PDFs and reads the table of contents.
 For each section a test is generated with that section's name and contains the relevant pages relative to the document.
 In addition to the `map.csv` file the command to execute ImageTester with the map and batch is generated.
 
-Eg. of output
+Eg. of output 
 ```
 Generated CSV file to: /dir/map.csv
 Run the following command in ImageTester Folder
