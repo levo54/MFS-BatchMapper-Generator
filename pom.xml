@@ -21,7 +21,7 @@
                 <archive>
                 <manifest>
                     <mainClass>
-                        com.applitools.batchmapper.MFSBatchMapper
+                        com.applitools.MFSBatchMapper.MFS_BatchMapper_Generator
                     </mainClass>
                 </manifest>
                 </archive>

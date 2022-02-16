@@ -1,4 +1,4 @@
-package com.applitools.batchmapper;
+package com.applitools.MFSBatchMapper;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -133,7 +133,7 @@ public class MFS_BatchMapper_Generator {
 	private static void usage(Options options)
 	{
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("MFSBatch Mapper [-k <api-key>] [options]", options);
+		formatter.printHelp("MFS-BatchMapper-Generator [-k <api-key>] [options]", options);
 	}
 
 	public class MFSBatchMapperExceuter
