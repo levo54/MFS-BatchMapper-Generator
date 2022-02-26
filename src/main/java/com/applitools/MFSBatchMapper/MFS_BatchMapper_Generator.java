@@ -20,6 +20,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 import com.opencsv.CSVWriter;
 
@@ -114,6 +115,20 @@ public class MFS_BatchMapper_Generator {
                 .argName("section")
                 .build());
         
+        options.addOption(Option.builder("fos")
+                .longOpt("fosec")
+                .desc("Filter out these sections")
+                .hasArg()
+                .argName("fosec")
+                .build());
+        
+        options.addOption(Option.builder("fr")
+                .longOpt("firstrun")
+                .desc("Maps to the first 2 pages of the report")
+                .hasArg(false)
+                .argName("firstrun")
+                .build());
+        
         options.addOption(Option.builder("cg")
                 .longOpt("cmdgen")
                 .desc("Generate Commands in addition to csv")
@@ -140,6 +155,7 @@ public class MFS_BatchMapper_Generator {
 	{
 
 		final String batchId =UUID.randomUUID().toString();
+		final String FIRST_RUN_PAGES = "1-2";
 		
 		private int offset; // TOC + Header pages
 		private int tocPage;
@@ -168,13 +184,27 @@ public class MFS_BatchMapper_Generator {
 			File root = new File(cmd.getOptionValue("f", "."));
 			if (root.isFile())
 			{
-				parseFile(root);
+				if(cmd.hasOption("firstrun")) 
+					rows4CSV.addAll(generateList4CSV(new ArrayList<String>() {{add("blank");}},null,root,true));
+				else
+					rows4CSV.addAll(parseFile(root));
 			}
 			else
 			{
-				File[] files = root.listFiles();
+				File[] files = root.listFiles((dir, name) -> name.toLowerCase().endsWith(".pdf"));
+				
+				if(files == null) 
+				{
+					System.out.println("No files found in specified path: "+root.getPath());
+					return;
+				}
+				
+				
 				for (File file : files) {
-					rows4CSV.addAll(parseFile(file));
+					if(cmd.hasOption("firstrun")) 
+						rows4CSV.addAll(generateList4CSV(new ArrayList<String>() {{add("blank");}},null,file,true));
+					else
+						rows4CSV.addAll(parseFile(file));
 				}
 			}
 			
@@ -186,12 +216,12 @@ public class MFS_BatchMapper_Generator {
 			System.out.println(generateEndCommand(csvFilePath));						
 		} 
 
-
 		private List<String[]> parseFile(File file) throws IOException
 		{
 			ArrayList<String> TOC_Text = new ArrayList<String>();
 			ArrayList<Integer> TOC_Pages = new ArrayList<Integer>();
-
+			Boolean TOC_PageFound = false;
+			
 			PDDocument pd = PDDocument.load(file);
 
 			int totalPages = pd.getNumberOfPages();
@@ -200,20 +230,22 @@ public class MFS_BatchMapper_Generator {
 			ObjectExtractor oe = new ObjectExtractor(pd);
 			BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
 			Page page = oe.extract(tocPage);
-
+			
 			// extract text from the table after detecting
 			List<Table> table = sea.extract(page);
+
 			for(Table tables: table) {
 				List<List<RectangularTextContainer>> rows = tables.getRows();
 
 				for(int i=0; i<rows.size(); i++) {
 
 					List<RectangularTextContainer> cells = rows.get(i);
-
 					for(int j=0; j<cells.size(); j++) {
 						String text = cells.get(j).getText();
 						//System.out.println(text);
-
+						
+						if(text.equals("Table of Contents")) TOC_PageFound=true; ///check
+						
 						if(Pattern.matches("[a-zA-Z ]+\\d+$", text) && text.length()>1)
 						{
 							try {
@@ -244,9 +276,34 @@ public class MFS_BatchMapper_Generator {
 			}
 			pd.close();
 			
-			if(cmd.hasOption("cmdgen"))
-				generateIT(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
-			return generateList4CSV(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
+			if(!TOC_PageFound)
+			{
+				this.offset++;
+				this.tocPage++;				
+				
+				if(tocPage > totalPages) //No TOC Page
+					{
+					TOC_Text.clear();
+					TOC_Text.add(file.getName());
+					
+					ArrayList<String> TOC_Pages_tmp = new ArrayList<String>();
+					TOC_Pages_tmp.add("");
+		
+					return generateList4CSV(TOC_Text, TOC_Pages_tmp, file);
+					}
+							
+				List<String[]> res = parseFile(file);
+				this.offset--;
+				this.tocPage--;
+				
+				return res;
+			}
+			else {
+				if(cmd.hasOption("cmdgen"))
+					generateIT(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
+				return generateList4CSV(TOC_Text,CalcPages(TOC_Pages,totalPages),file);
+			}
+
 
 		}
 
@@ -258,11 +315,14 @@ public class MFS_BatchMapper_Generator {
 			ArrayList<String> TOC_pages = new ArrayList<String>();
 			int loopSize= pages.size()-1;
 			int i,a=0,b;
-
+			
+			int firstPageNum = pages.get(0);
+			int offsetCalc = firstPageNum-1;
+			
 			for(i=0;i<loopSize;i++)
 			{
-				a=pages.get(i);
-				b=pages.get(i+1);
+				a=pages.get(i)+offset-offsetCalc;
+				b=pages.get(i+1)+offset-offsetCalc;//fix offset
 
 				if(b-a==1)
 				{
@@ -272,8 +332,7 @@ public class MFS_BatchMapper_Generator {
 					TOC_pages.add(i, String.format("%d-%d", a,b-1));
 			}
 
-			totalPages=totalPages-offset;
-			a=pages.get(i);
+			a=pages.get(i)+offset-offsetCalc;
 
 			if(totalPages-a==0)
 			{
@@ -331,6 +390,13 @@ public class MFS_BatchMapper_Generator {
 		
 		public List<String[]> generateList4CSV(ArrayList<String> text, ArrayList<String> pages,File file) throws IOException
 		{
+			return generateList4CSV(text, pages,file,false) ;
+			
+		}
+		
+		
+		public List<String[]> generateList4CSV(ArrayList<String> text, ArrayList<String> pages,File file,boolean firstRun) throws IOException
+		{
 			int i;
 			
 			String str="";
@@ -346,10 +412,19 @@ public class MFS_BatchMapper_Generator {
 							
 				row = new String[9];
 				Arrays.fill(row, "");
-				row[0]= file.getAbsolutePath();
-				row[1]=text.get(i);  // TestName
+				row[0]=file.getAbsolutePath();
 				row[2]=file.getName(); // FileName as AppName
-				row[7]=pages.get(i); // Span				
+				
+				if(!firstRun)
+				{
+					row[1]=text.get(i);  // TestName
+					row[7]=pages.get(i); // Span	
+				}
+				else
+				{
+					row[1]=file.getName();  // TestName
+					row[7]=FIRST_RUN_PAGES; // Span	
+				}
 				
 				rows.add(row);
 				}
