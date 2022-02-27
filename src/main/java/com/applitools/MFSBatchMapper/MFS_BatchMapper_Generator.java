@@ -161,7 +161,7 @@ public class MFS_BatchMapper_Generator {
 		private int tocPage;
 		private CommandLine cmd;  
 		private String section;
-		
+		private List<String> filterSections;
 		
 		public MFSBatchMapperExceuter(CommandLine cmd)
 		{
@@ -169,6 +169,7 @@ public class MFS_BatchMapper_Generator {
 			this.tocPage = Integer.parseInt(cmd.getOptionValue("t", "2"));
 			this.offset = Integer.parseInt(cmd.getOptionValue("o", ""+tocPage));
 			this.section = cmd.getOptionValue("sc","");
+			this.filterSections = Arrays.asList(cmd.getOptionValue("fosec","").split("\\s*,[,\\s]*"));
 		}
 
 		public void execute() throws IOException
@@ -402,11 +403,11 @@ public class MFS_BatchMapper_Generator {
 			String str="";
 			List<String[]> rows = new ArrayList<String[]>();
 			String[] row;
-
 			
             for(i=0;i<text.size();i++)
 			{
-				if(text.get(i).compareTo(section) == 0 || section == "")
+            	str=text.get(i);
+				if((str.compareTo(section) == 0 || section == "") && !filterSections.contains(str))
 				{
 					
 							
