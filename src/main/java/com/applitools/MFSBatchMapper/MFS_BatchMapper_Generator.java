@@ -247,7 +247,7 @@ public class MFS_BatchMapper_Generator {
 						
 						if(text.equals("Table of Contents")) TOC_PageFound=true; ///check
 						
-						if(Pattern.matches("[a-zA-Z ]+\\d+$", text) && text.length()>1)
+						if(Pattern.matches("\\D+\\d+$", text) && text.length()>1)
 						{
 							try {
 								int len=text.length();
